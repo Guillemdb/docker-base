@@ -1,0 +1,118 @@
+From 267052b3d102974588aa03f51af62b7032477a56 Mon Sep 17 00:00:00 2001
+From: Vadim Markovtsev <vadim@sourced.tech>
+Date: Sat, 30 Jun 2018 10:09:24 +0200
+Subject: [PATCH] Port to Python 3.7
+
+---
+ tensorflow/c/eager/c_api.h                   | 4 ++--
+ tensorflow/python/eager/pywrap_tfe.h         | 2 +-
+ tensorflow/python/eager/pywrap_tfe_src.cc    | 2 +-
+ tensorflow/python/lib/core/ndarray_tensor.cc | 2 +-
+ tensorflow/python/lib/core/py_func.cc        | 2 +-
+ tensorflow/python/pywrap_tfe.i               | 6 +++---
+ 6 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/tensorflow/c/eager/c_api.h b/tensorflow/c/eager/c_api.h
+index 574a097e0d..7e59c8cc05 100644
+--- a/tensorflow/c/eager/c_api.h
++++ b/tensorflow/c/eager/c_api.h
+@@ -76,7 +76,7 @@ typedef enum TFE_ContextDevicePlacementPolicy {
+ // Sets the default execution mode (sync/async). Note that this can be
+ // overridden per thread using TFE_ContextSetAsyncForThread.
+ TF_CAPI_EXPORT extern void TFE_ContextOptionsSetAsync(TFE_ContextOptions*,
+-                                                      unsigned char async);
++                                                      unsigned char async_);
+ 
+ TF_CAPI_EXPORT extern void TFE_ContextOptionsSetDevicePlacementPolicy(
+     TFE_ContextOptions*, TFE_ContextDevicePlacementPolicy);
+@@ -125,7 +125,7 @@ TFE_ContextGetDevicePlacementPolicy(TFE_Context*);
+ 
+ // Overrides the execution mode (sync/async) for the current thread.
+ TF_CAPI_EXPORT extern void TFE_ContextSetAsyncForThread(TFE_Context*,
+-                                                        unsigned char async,
++                                                        unsigned char async_,
+                                                         TF_Status* status);
+ 
+ // Causes the calling thread to block till all ops dispatched in async mode
+diff --git a/tensorflow/python/eager/pywrap_tfe.h b/tensorflow/python/eager/pywrap_tfe.h
+index 9bc8b9bc72..e28f097826 100644
+--- a/tensorflow/python/eager/pywrap_tfe.h
++++ b/tensorflow/python/eager/pywrap_tfe.h
+@@ -87,7 +87,7 @@ int MaybeRaiseExceptionFromStatus(const tensorflow::Status& status,
+                                   PyObject* exception);
+ 
+ // Returns the string associated with the passed-in python object.
+-char* TFE_GetPythonString(PyObject* o);
++const char* TFE_GetPythonString(PyObject* o);
+ 
+ // Returns a unique id on each call.
+ int64_t get_uid();
+diff --git a/tensorflow/python/eager/pywrap_tfe_src.cc b/tensorflow/python/eager/pywrap_tfe_src.cc
+index f78043e374..3327b9ce9c 100644
+--- a/tensorflow/python/eager/pywrap_tfe_src.cc
++++ b/tensorflow/python/eager/pywrap_tfe_src.cc
+@@ -802,7 +802,7 @@ int MaybeRaiseExceptionFromStatus(const tensorflow::Status& status,
+   return -1;
+ }
+ 
+-char* TFE_GetPythonString(PyObject* o) {
++const char* TFE_GetPythonString(PyObject* o) {
+   if (PyBytes_Check(o)) {
+     return PyBytes_AsString(o);
+   }
+diff --git a/tensorflow/python/lib/core/ndarray_tensor.cc b/tensorflow/python/lib/core/ndarray_tensor.cc
+index 9df38d464c..b42cfb1333 100644
+--- a/tensorflow/python/lib/core/ndarray_tensor.cc
++++ b/tensorflow/python/lib/core/ndarray_tensor.cc
+@@ -154,7 +154,7 @@ Status PyBytesArrayMap(PyArrayObject* array, F f) {
+     if (PyUnicode_Check(item.get())) {
+ #if PY_VERSION_HEX >= 0x03030000
+       // Accept unicode by converting to UTF-8 bytes.
+-      ptr = PyUnicode_AsUTF8AndSize(item.get(), &len);
++      ptr = const_cast<char*>(PyUnicode_AsUTF8AndSize(item.get(), &len));
+       if (!ptr) {
+         return errors::Internal("Unable to get element as UTF-8.");
+       }
+diff --git a/tensorflow/python/lib/core/py_func.cc b/tensorflow/python/lib/core/py_func.cc
+index 8c6bb7955a..efbc14d483 100644
+--- a/tensorflow/python/lib/core/py_func.cc
++++ b/tensorflow/python/lib/core/py_func.cc
+@@ -322,7 +322,7 @@ Status ConvertNdarrayToTensor(PyObject* obj, Tensor* ret) {
+         Py_ssize_t el_size;
+         if (PyBytes_AsStringAndSize(input_data[i], &el, &el_size) == -1) {
+ #if PY_MAJOR_VERSION >= 3
+-          el = PyUnicode_AsUTF8AndSize(input_data[i], &el_size);
++          el = const_cast<char*>(PyUnicode_AsUTF8AndSize(input_data[i], &el_size));
+ #else
+           el = nullptr;
+           if (PyUnicode_Check(input_data[i])) {
+diff --git a/tensorflow/python/pywrap_tfe.i b/tensorflow/python/pywrap_tfe.i
+index 5f1fafb9dc..927adc6a94 100644
+--- a/tensorflow/python/pywrap_tfe.i
++++ b/tensorflow/python/pywrap_tfe.i
+@@ -101,19 +101,19 @@ limitations under the License.
+ }
+ 
+ %typemap(in) const char* serialized_function_def {
+-  $1 = TFE_GetPythonString($input);
++  $1 = const_cast<char*>(TFE_GetPythonString($input));
+ }
+ 
+ %typemap(in) const char* device_name {
+   if ($input == Py_None) {
+     $1 = nullptr;
+   } else {
+-    $1 = TFE_GetPythonString($input);
++    $1 = const_cast<char*>(TFE_GetPythonString($input));
+   }
+ }
+ 
+ %typemap(in) const char* op_name {
+-  $1 = TFE_GetPythonString($input);
++  $1 = const_cast<char*>(TFE_GetPythonString($input));
+ }
+ 
+ %typemap(in) (TFE_Context*) {
+-- 
+2.17.1
+

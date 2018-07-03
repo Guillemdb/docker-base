@@ -1,0 +1,33 @@
+From ee03e1f744485a4ad55b40222b407e6b2f3a0d9e Mon Sep 17 00:00:00 2001
+From: Vadim Markovtsev <vadim@sourced.tech>
+Date: Sat, 30 Jun 2018 16:53:37 +0000
+Subject: [PATCH] Update Cython
+
+---
+ tensorflow/workspace.bzl | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/tensorflow/workspace.bzl b/tensorflow/workspace.bzl
+index 79274d6..2458666 100644
+--- a/tensorflow/workspace.bzl
++++ b/tensorflow/workspace.bzl
+@@ -651,12 +651,12 @@ def tf_workspace(path_prefix="", tf_repo_name=""):
+ 
+   tf_http_archive(
+       name = "cython",
+-      sha256 = "6dcd30b5ceb887b2b965ee7ceb82ea3acb5f0642fe2206c7636b45acea4798e5",
++      sha256 = "f1e760198ac476d4dd313a0180dea48936ffff15933e97d35e26e07b94d33334",
+       urls = [
+-          "https://mirror.bazel.build/github.com/cython/cython/archive/3732784c45cfb040a5b0936951d196f83a12ea17.tar.gz",
+-          "https://github.com/cython/cython/archive/3732784c45cfb040a5b0936951d196f83a12ea17.tar.gz",
++          "https://mirror.bazel.build/github.com/cython/cython/archive/5e7d47656163017936ea4105226d1c392b0bba54.tar.gz",
++          "https://github.com/cython/cython/archive/5e7d47656163017936ea4105226d1c392b0bba54.tar.gz",
+       ],
+-      strip_prefix = "cython-3732784c45cfb040a5b0936951d196f83a12ea17",
++      strip_prefix = "cython-5e7d47656163017936ea4105226d1c392b0bba54",
+       build_file = clean_dep("//third_party:cython.BUILD"),
+       delete = ["BUILD.bazel"],
+   )
+-- 
+2.17.1
+
