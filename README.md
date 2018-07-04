@@ -1,4 +1,5 @@
-# docker-base
+# docker-base ![Docker Build Status](https://img.shields.io/docker/build/guillemdb/docker-base.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/guillemdb/docker-base.svg)
+
 Bleeding edge Docker image with:
 
 - Ubuntu 18.04
