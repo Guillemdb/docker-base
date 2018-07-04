@@ -55,8 +55,9 @@ RUN apt-get update && \
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/cuda-${CUDA_VERSION_MAJOR}/bin
 
 # cudnn layer
-ADD libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb /
-RUN dpkg -i /libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb && rm libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb
+RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7_7.1.4.18-1%2Bcuda9.2_amd64.deb && \
+    dpkg -i libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb && \
+    rm libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb
 
 # pip deps
 ENV NPY_NUM_BUILD_JOBS 8
@@ -64,12 +65,12 @@ RUN pip3 install --no-cache-dir numpy
 
 # build and install tensorflow
 ENV BAZEL_VERSION 0.15.0
-ADD libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb /
 ADD 0001-Port-to-Python-3.7.patch /
 ADD 0002-Update-Cython.patch /
-RUN apt-get update && \
-    dpkg -i /libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb && \
+RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7-dev_7.1.4.18-1%2Bcuda9.2_amd64.deb && \
+    dpkg -i libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb && \
     rm libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb && \
+    apt-get update && \
     apt-get install -y --no-install-suggests --no-install-recommends \
         unzip \
         cuda-command-line-tools-${CUDA_VERSION_DASH} \
