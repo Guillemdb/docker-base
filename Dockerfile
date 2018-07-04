@@ -154,7 +154,7 @@ RUN apt-get update && \
     pip3 uninstall -y cython && \
     apt-get remove -y cmake cmake pkg-config libpng-dev \
         libjpeg-turbo8-dev zlib1g-dev libhdf5-dev libopenblas-dev gfortran \
-        libfreetype6-dev gcc g++ make git && \
+        libfreetype6-dev && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
