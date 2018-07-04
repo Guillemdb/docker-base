@@ -11,6 +11,10 @@ Bleeding edge Docker image with:
 
 The default command launches Jupyter on port 8080.
 
+```
+docker run -d -p 80:8080 guillemdb/docker-base
+```
+
 ### Features
 
 - Tensorflow is compiled during image build, easy to update
@@ -20,6 +24,7 @@ The default command launches Jupyter on port 8080.
 
 ### Customization
 
+- `JUPYTER_PASSWORD` is the security token for Jupyter, **you should change it from the default "mallorca"**!
 - `NVIDIA_DRIVER_VERSION` must be set to the one your host system is running
 - `CUDA_VERSION` sets the CUDA version
 - `NPY_NUM_BUILD_JOBS` should be set to the number of cores in your host

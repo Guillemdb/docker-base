@@ -1,5 +1,14 @@
 FROM ubuntu:18.04
 
+ENV NVIDIA_DRIVER_VERSION 384.130
+ENV CUDA_VERSION 9.2.88
+ENV CUDA_VERSION_DASH 9-2
+ENV CUDA_VERSION_MAJOR 9.2
+ENV NPY_NUM_BUILD_JOBS 8
+ENV BAZEL_VERSION 0.15.0
+ENV TENSORFLOW_BRANCH r1.9
+ENV JUPYTER_PASSWORD mallorca
+
 # base layer - python3.7
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -16,7 +25,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # nvidia driver layer
-ENV NVIDIA_DRIVER_VERSION 384.130
 RUN apt-get update && \
     apt-get install -y kmod && \
     mkdir -p /opt/nvidia && cd /opt/nvidia/ && \
@@ -30,9 +38,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # cuda layer
-ENV CUDA_VERSION 9.2.88
-ENV CUDA_VERSION_DASH 9-2
-ENV CUDA_VERSION_MAJOR 9.2
 RUN apt-get update && \
     apt-get install -y gnupg && \
     wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_${CUDA_VERSION}-1_amd64.deb && \
@@ -60,12 +65,9 @@ RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7_7.1.4.18
     rm libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb
 
 # pip deps
-ENV NPY_NUM_BUILD_JOBS 8
 RUN pip3 install --no-cache-dir numpy
 
 # build and install tensorflow
-ENV BAZEL_VERSION 0.15.0
-ENV TENSORFLOW_BRANCH r1.9
 ADD 0001-Port-to-Python-3.7.patch /
 ADD 0002-Update-Cython.patch /
 RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7-dev_7.1.4.18-1%2Bcuda9.2_amd64.deb && \
@@ -162,5 +164,5 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /root/.jupyter && \
-    echo 'c.NotebookApp.token = "mallorca"' > /root/.jupyter/jupyter_notebook_config.py
+    echo 'c.NotebookApp.token = "'${JUPYTER_PASSWORD}'"' > /root/.jupyter/jupyter_notebook_config.py
 CMD jupyter notebook --allow-root --port 8080 --ip 0.0.0.0
