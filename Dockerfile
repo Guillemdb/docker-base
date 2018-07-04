@@ -1,5 +1,14 @@
 FROM ubuntu:18.04
 
+ENV NVIDIA_DRIVER_VERSION 384.130
+ENV CUDA_VERSION 9.2.88
+ENV CUDA_VERSION_DASH 9-2
+ENV CUDA_VERSION_MAJOR 9.2
+ENV NPY_NUM_BUILD_JOBS 8
+ENV BAZEL_VERSION 0.15.0
+ENV TENSORFLOW_BRANCH r1.9
+ENV JUPYTER_PASSWORD mallorca
+
 # base layer - python3.7
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -16,7 +25,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # nvidia driver layer
-ENV NVIDIA_DRIVER_VERSION 384.130
 RUN apt-get update && \
     apt-get install -y kmod && \
     mkdir -p /opt/nvidia && cd /opt/nvidia/ && \
@@ -30,9 +38,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # cuda layer
-ENV CUDA_VERSION 9.2.88
-ENV CUDA_VERSION_DASH 9-2
-ENV CUDA_VERSION_MAJOR 9.2
 RUN apt-get update && \
     apt-get install -y gnupg && \
     wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_${CUDA_VERSION}-1_amd64.deb && \
@@ -55,21 +60,20 @@ RUN apt-get update && \
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/cuda-${CUDA_VERSION_MAJOR}/bin
 
 # cudnn layer
-ADD libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb /
-RUN dpkg -i /libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb && rm libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb
+RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7_7.1.4.18-1%2Bcuda9.2_amd64.deb && \
+    dpkg -i libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb && \
+    rm libcudnn7_7.1.4.18-1+cuda9.2_amd64.deb
 
 # pip deps
-ENV NPY_NUM_BUILD_JOBS 8
 RUN pip3 install --no-cache-dir numpy
 
 # build and install tensorflow
-ENV BAZEL_VERSION 0.15.0
-ADD libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb /
 ADD 0001-Port-to-Python-3.7.patch /
 ADD 0002-Update-Cython.patch /
-RUN apt-get update && \
-    dpkg -i /libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb && \
+RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7-dev_7.1.4.18-1%2Bcuda9.2_amd64.deb && \
+    dpkg -i libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb && \
     rm libcudnn7-dev_7.1.4.18-1+cuda9.2_amd64.deb && \
+    apt-get update && \
     apt-get install -y --no-install-suggests --no-install-recommends \
         unzip \
         cuda-command-line-tools-${CUDA_VERSION_DASH} \
@@ -83,7 +87,7 @@ RUN apt-get update && \
     chmod +x ./bazel-*.sh && \
     ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
     rm ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
-    git clone --single-branch --depth 1 --branch r1.9 https://github.com/tensorflow/tensorflow && \
+    git clone --single-branch --depth 1 --branch ${TENSORFLOW_BRANCH} https://github.com/tensorflow/tensorflow && \
     cd tensorflow && \
     git apply /0001-Port-to-Python-3.7.patch && \
     git apply /0002-Update-Cython.patch && \
@@ -154,11 +158,11 @@ RUN apt-get update && \
     pip3 uninstall -y cython && \
     apt-get remove -y cmake cmake pkg-config libpng-dev \
         libjpeg-turbo8-dev zlib1g-dev libhdf5-dev libopenblas-dev gfortran \
-        libfreetype6-dev gcc g++ make git && \
+        libfreetype6-dev && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /root/.jupyter && \
-    echo 'c.NotebookApp.token = "mallorca"' > /root/.jupyter/jupyter_notebook_config.py
+    echo 'c.NotebookApp.token = "'${JUPYTER_PASSWORD}'"' > /root/.jupyter/jupyter_notebook_config.py
 CMD jupyter notebook --allow-root --port 8080 --ip 0.0.0.0
