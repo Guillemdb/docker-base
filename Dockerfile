@@ -65,6 +65,7 @@ RUN pip3 install --no-cache-dir numpy
 
 # build and install tensorflow
 ENV BAZEL_VERSION 0.15.0
+ENV TENSORFLOW_BRANCH r1.9
 ADD 0001-Port-to-Python-3.7.patch /
 ADD 0002-Update-Cython.patch /
 RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7-dev_7.1.4.18-1%2Bcuda9.2_amd64.deb && \
@@ -84,7 +85,7 @@ RUN wget https://github.com/Guillem-db/docker-base/raw/master/libcudnn7-dev_7.1.
     chmod +x ./bazel-*.sh && \
     ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
     rm ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
-    git clone --single-branch --depth 1 --branch r1.9 https://github.com/tensorflow/tensorflow && \
+    git clone --single-branch --depth 1 --branch ${TENSORFLOW_BRANCH} https://github.com/tensorflow/tensorflow && \
     cd tensorflow && \
     git apply /0001-Port-to-Python-3.7.patch && \
     git apply /0002-Update-Cython.patch && \
